@@ -106,6 +106,7 @@ def whitelist_endpoint(session_id: str):
 
 @app.post("/reset")
 def reset_endpoint():
+    from backend.pipeline import guardian, canary_engine
     with stats_lock:
         stats["total_requests"] = 0
         stats["attacks"] = 0
@@ -114,8 +115,18 @@ def reset_endpoint():
         stats["safe"] = 0
         stats["total_latency_ms"] = 0.0
         stats["by_owasp"].clear()
+    
     with forensic_logger._lock:
         forensic_logger._log.clear()
+        
+    with guardian._lock if hasattr(guardian, '_lock') else stats_lock:
+        guardian._whitelists.clear()
+        guardian._escalation_counts.clear()
+        guardian._confirmed.clear()
+        
+    # Canary tokens are ephemeral but clearing them ensures a fresh start
+    canary_engine._active_tokens.clear()
+    
     return {"status": "reset"}
 
 @app.get("/health")

@@ -4,6 +4,7 @@ import { api } from '../api';
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [logs, setLogs] = useState([]);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -25,9 +26,13 @@ export default function Dashboard() {
   if (!stats) return <div>Loading...</div>;
 
   const handleReset = async () => {
-    if (window.confirm("Are you sure you want to clear all stats and forensic logs?")) {
+    try {
       await api.reset();
-      fetchData();
+      setIsConfirming(false);
+      await fetchData();
+    } catch (e) {
+      console.error("Reset failed:", e);
+      alert("Failed to reset data. Please try again.");
     }
   };
 
@@ -35,9 +40,20 @@ export default function Dashboard() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h2>Dashboard</h2>
-        <button className="btn btn-secondary" onClick={handleReset} style={{ color: 'var(--danger)', borderColor: 'var(--danger-light)' }}>
-          Clear All Data
-        </button>
+        {!isConfirming ? (
+          <button className="btn btn-secondary" onClick={() => setIsConfirming(true)} style={{ color: 'var(--danger)', borderColor: 'var(--danger-light)' }}>
+            Clear All Data
+          </button>
+        ) : (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className="btn btn-secondary" onClick={() => setIsConfirming(false)} style={{ fontSize: '12px' }}>
+              Cancel
+            </button>
+            <button className="btn btn-primary" onClick={handleReset} style={{ background: 'var(--danger)', borderColor: 'var(--danger)', color: 'white', fontSize: '12px' }}>
+              Confirm Wipe
+            </button>
+          </div>
+        )}
       </div>
       
       <div className="metric-grid">
