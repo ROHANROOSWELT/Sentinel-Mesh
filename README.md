@@ -61,9 +61,9 @@ This makes detection **output-driven, model-agnostic, and resilient to input-lev
 Every request flows through a five-agent pipeline. Each agent has a single, well-defined security responsibility.
 
 ```
-User Input
-     │
-     ▼
+             User Input
+                 │
+                 ▼
 ┌─────────────────────────────────┐
 │  Layer 1 — Gate Agent           │  Trust scoring (0.0–1.0)
 │  [OWASP LLM01]                  │  Blocks hostile, flags suspicious
