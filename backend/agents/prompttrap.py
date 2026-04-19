@@ -136,7 +136,7 @@ class PromptTrapMiddleware:
                     api_key=OPENAI_API_KEY,
                 )
                 resp = client.chat.completions.create(
-                    model="openai/gpt-3.5-turbo",
+                    model="openai/gpt-oss-120b:free",
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": message}

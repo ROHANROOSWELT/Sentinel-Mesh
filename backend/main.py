@@ -136,20 +136,29 @@ def benchmark_endpoint():
         "categories": defaultdict(lambda: {"tested": 0, "detected": 0})
     }
     
-    for case in BENCHMARK_CASES:
-        input_issues, input_score = prompttrap.detection_engine.scan_input(case["input"])
-        verdict = prompttrap.detection_engine.classify(input_score, 0)
+    import uuid
+    session_base = str(uuid.uuid4())
+    base_system = "You are a helpful AI assistant."
+    
+    for idx, case in enumerate(BENCHMARK_CASES):
+        input_text = case["input"]
+        session_id = f"bench_{session_base}_{idx}"
         
-        is_detected = verdict.value in ["ATTACK", "BLOCKED", "SUSPICIOUS"]
+        # Real pipeline execution (no simulation)
+        call_res = prompttrap.protect_and_call(session_id, base_system, input_text)
+        
+        verdict = call_res.analysis.verdict
+        risk_score = call_res.analysis.risk_score
+        is_detected = verdict in ["ATTACK", "BLOCKED", "SUSPICIOUS"]
         
         results.append({
             "category": case["category"],
-            "input": case["input"][:60] + ("..." if len(case["input"]) > 60 else ""),
+            "input": input_text[:60] + ("..." if len(input_text) > 60 else ""),
             "expected": "ATTACK (or SUSPICIOUS)",
-            "actual": verdict.value,
-            "risk_score": input_score,
+            "actual": verdict,
+            "risk_score": risk_score,
             "detected": is_detected,
-            "patterns": [i.trigger for i in input_issues]
+            "patterns": [i.trigger for i in call_res.analysis.input_issues]
         })
         
         summary["categories"][case["category"]]["tested"] += 1
