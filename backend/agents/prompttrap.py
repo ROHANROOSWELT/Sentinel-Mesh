@@ -128,31 +128,36 @@ class PromptTrapMiddleware:
             ]
             return random.choice(safe_responses)
         else:
-            is_openrouter = OPENAI_API_KEY.startswith("sk-or-")
-            if is_openrouter:
-                from openai import OpenAI
-                client = OpenAI(
-                    base_url="https://openrouter.ai/api/v1",
-                    api_key=OPENAI_API_KEY,
-                )
-                resp = client.chat.completions.create(
-                    model="openai/gpt-oss-120b:free",
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": message}
-                    ],
-                    max_tokens=400, temperature=0.7
-                )
-                return resp.choices[0].message.content
-            else:
-                from openai import OpenAI
-                client = OpenAI(api_key=OPENAI_API_KEY)
-                resp = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": message}
-                    ],
-                    max_tokens=400, temperature=0.7
-                )
-                return resp.choices[0].message.content
+            try:
+                is_openrouter = OPENAI_API_KEY.startswith("sk-or-")
+                if is_openrouter:
+                    from openai import OpenAI
+                    client = OpenAI(
+                        base_url="https://openrouter.ai/api/v1",
+                        api_key=OPENAI_API_KEY,
+                    )
+                    resp = client.chat.completions.create(
+                        model="openai/gpt-oss-120b:free",
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": message}
+                        ],
+                        max_tokens=400, temperature=0.7
+                    )
+                    return resp.choices[0].message.content
+                else:
+                    from openai import OpenAI
+                    client = OpenAI(api_key=OPENAI_API_KEY)
+                    resp = client.chat.completions.create(
+                        model="gpt-3.5-turbo",
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": message}
+                        ],
+                        max_tokens=400, temperature=0.7
+                    )
+                    return resp.choices[0].message.content
+            except Exception as e:
+                print(f"API Error: {e}")
+                # Fallback to simulated response if their API key is invalid or revoked.
+                return "The API key provided is returning an error: " + str(e)
